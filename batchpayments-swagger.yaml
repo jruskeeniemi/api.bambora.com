@@ -1,0 +1,211 @@
+swagger: '2.0'
+
+info:
+  version: "1.0.0"
+  title: Bambora Batch Payments API
+  description: Provides interface for executing batch of payments with a single API call. When execution of the batch is completed, the client is notified with optional webhook call after which the client can retrieve batch status information. Further operations for payments can be done with Bambora Payment API.
+  
+schemes: 
+  - https
+  
+host: api-beta.bambora.com
+
+consumes:
+  - application/json
+
+produces:
+  - application/json
+  - application/problem+json
+  
+paths:
+  /batchpayments/{batch}:
+    get:
+      description: Gets status of the specified payment batch
+      tags:
+        - batch payments
+      security: 
+        - auth:
+          - read_payment
+      parameters:
+        -
+          name: batch
+          in: path
+          type: string
+          required: true
+          description: Identifier for the payment batch
+      responses:
+        200:
+          description: Successful response
+          schema:
+            type: array
+            items: 
+              $ref: '#/definitions/PaymentResponse'
+        404:
+          description: Unknown payment batch
+        default:
+          description: Unexpected error
+    post:
+      description: Submits a new batch of payments for processing
+      tags:
+        - batch payments
+      security:
+        - auth:
+          - create_payment
+      parameters:
+        -
+          name: batch
+          in: path
+          type: string
+          required: true
+          description: Identifier for the payment batch
+        -
+          name: payments
+          in: body
+          schema:
+            $ref: '#/definitions/PaymentRequests'
+      responses:
+        201:
+          description: Payment batch successfully submitted for processing
+        default:
+          description: Unexpected error
+
+definitions:
+  PaymentRequests:
+    type: array
+    items:
+      $ref: '#/definitions/PaymentRequest'
+
+  PaymentRequest:
+    type: object
+    required:
+      - merchant
+      - payment
+      - currency
+      - amount
+      - card_number
+      - exp_year
+      - exp_month
+    properties:
+      merchant:
+        type: string
+        title: Identifier of the merchant
+        description: Retrieved during onboarding. Will be the same as the host of the request.
+      payment:
+        type: string
+        title: Merchant-specific identifier for the payment
+      currency:
+        type: string
+        title: Currency of the payment in ISO 4217 alpha
+        description: For example EUR
+      amount:
+        type: integer
+        format: int64
+        minimum: 0
+        title: The amount of the payment in the minor unit of the currency
+        description: For example 1000 for 10.00 EUR
+      card_number:
+        type: string
+        title: Card number
+      exp_year:
+        type: integer
+        title: Year of card expiry
+      exp_month:
+        type: integer
+        title: Month of card expiry
+
+  Capture:
+    type: object
+    properties:
+      amount:
+        type: integer
+        format: int64
+        minimum: 0
+        description: >
+          Amount to capture, in cents (or equivalent). If this is less
+          than the amount of the payment, a partial capture will be
+          performed. If this parameter is omitted, the entire amount
+          of the payment will be captured.
+      comment:
+        type: string
+        maxLength: 256
+        description: >
+          256 characters of available space for a comment that will be
+          saved on the payment.
+    required:
+    - amount
+    example:
+      amount: 1000
+      comment: 10 EUR capture
+
+  PaymentResponse:
+    type: object
+    required:
+      - payment
+      - state
+    properties:
+      region:
+        type: string
+        description: >
+          Geographical region of the merchant. Will be the same as the
+          sub-domain of the request.
+        enum:
+          - emea_0
+          - apac_0
+          - amer_0
+      merchant:
+        type: string
+        description: >
+          Identifier of the merchant. Retrieved during
+          onboarding. Will be the same as the host of the request.
+      payment:
+        type: string
+        description: Merchant-specific identifier for the payment.
+      state:
+        type: string
+        description: Set by the system when sent for processing.
+        enum:
+          - None
+          - Authorized
+          - Authorization Expired
+          - Declined
+          - Voided
+          - Captured
+          - Refunded
+          - Settled
+          - Canceled
+      currency:
+        type: string
+        description: >
+          Values of: EUR, USD, DKK, CAD, GBP, SEK et c. Uses ISO-4217
+          currency codes.
+      amount:
+        type: integer
+        format: int64
+        minimum: 0
+        description: >
+          The amount of the payment in the specified currency's cents
+          (or equivalent).
+      comment:
+        type: string
+        maxLength: 256
+        description: >
+          256 characters of available space for a comment that will be
+          saved on the payment.
+      captures:
+        type: array
+        items:
+          $ref: '#/definitions/Capture'
+      scheme_action_code:
+        type: string
+        title: Authorization action code received from the card scheme
+        description: Usually 00 for approved authorization
+
+securityDefinitions:
+  auth:
+    type: oauth2
+    description: Access token from auth.bambora.com
+    flow: application
+    tokenUrl: https://auth.bambora.com/connect/token
+    scopes: 
+      read_payment: Grants reading payment information
+      create_payment: Grants making new payments
