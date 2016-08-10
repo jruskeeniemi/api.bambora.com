@@ -19,7 +19,7 @@ info:
     CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
     Certificate cert = certFactory.generateCertificate(new ByteArrayInputStream(certData));
     // calculate fingerprint
-    String fingerprint = Hex.encodeHexString(DigestUtils.sha(cert.getEncoded()));
+    String fingerprint = Hex.encodeHexString(DigestUtils.sha(cert.getEncoded())).toUpperCase();
     
     // generate AES-128 session key
     KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
@@ -699,8 +699,7 @@ definitions:
             fingerprint:
               type: string
               description: >
-                The SHA-1 fingerprint of the certificate
-                used for encrypting the session key.
+                Fingerprint of the certificate used for encrypting the session key. It is SHA-1 digest of DER encoded certificate. The digest is encoded to hex with uppercase characters.
             sessionKey:
               type: string
               description: >
