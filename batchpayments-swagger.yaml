@@ -104,6 +104,9 @@ definitions:
               type: string
               description: >
                 The base64 encoded encrypted session key.
+      callbackUrl:
+        type: string
+        title: URL to call after batch is processed
 
   PaymentRequest:
     type: object
@@ -134,9 +137,6 @@ definitions:
       capture:
         type: boolean
         title: Capture payment after successful authorization
-      callbackUrl:
-        type: string
-        title: URL to call after batch is processed
       encryptedCard:
         type: object
         required:
