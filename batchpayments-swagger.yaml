@@ -45,6 +45,10 @@ paths:
             type: array
             items: 
               $ref: '#/definitions/PaymentResponse'
+        401:
+          description: Unauthorized - access token missing or expired
+        403:
+          description: Forbidden - lacking privileges for requested action
         404:
           description: Unknown payment batch
         default:
@@ -71,6 +75,10 @@ paths:
       responses:
         201:
           description: Payment batch successfully submitted for processing
+        401:
+          description: Unauthorized - access token missing or expired
+        403:
+          description: Forbidden - lacking privileges for requested action
         default:
           description: Unexpected error
 
@@ -97,9 +105,7 @@ definitions:
           properties:
             fingerprint:
               type: string
-              description: >
-                The SHA-1 fingerprint of the certificate
-                used for encrypting the session key.
+              description: Fingerprint of the certificate used for encrypting the session key. It is SHA-1 digest of DER encoded certificate. The digest is encoded to hex with uppercase characters.
             sessionKey:
               type: string
               description: >
