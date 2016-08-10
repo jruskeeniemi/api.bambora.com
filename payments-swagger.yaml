@@ -709,7 +709,6 @@ definitions:
         type: object
         required:
           - cardNumber
-          - cvcCode
           - expiryMonth
           - expiryYear
         properties:
